@@ -1,0 +1,7 @@
+Flask
+pandas
+google-auth-oauthlib
+google-auth
+requests
+cachecontrol
+sqlite3
