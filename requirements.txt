@@ -7,4 +7,4 @@ CacheControl
 db-sqlite3
 Flask-SQLAlchemy
 SQLAlchemy
-psycopg2
+psycopg2-binary
