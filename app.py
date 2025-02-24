@@ -449,5 +449,5 @@ def analytics():
                           active_users=active_users)
 
 # Initialize the database at startup
-init_db()
+
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
