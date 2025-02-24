@@ -5,3 +5,5 @@ google-auth==2.36.0
 requests
 CacheControl
 db-sqlite3
+Flask-SQLAlchemy
+SQLAlchemy
