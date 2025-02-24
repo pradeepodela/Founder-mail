@@ -257,7 +257,11 @@ def admin_dashboard():
 
         # Format user data for template
         users = []
-        for user, view_count, last_activity in users_data:
+        for result in users_data:
+            user = result[0]  # Ensure first element is always User object
+            view_count = result[1] if len(result) > 1 else 0  # Handle missing count
+            last_activity = result[2] if len(result) > 2 else None  # Handle missing activity
+
             users.append({
                 'id': user.id,
                 'email': user.email,
@@ -266,8 +270,8 @@ def admin_dashboard():
                 'last_login': user.last_login,
                 'subscription_type': user.subscription_type,
                 'lead_view_limit': user.lead_view_limit,
-                'view_count': view_count,
-                'last_activity': last_activity
+                'view_count': view_count or 0,  # Default to 0 if None
+                'last_activity': last_activity or 'No activity'  # Default if None
             })
 
         # Get recent lead views with user information
@@ -286,15 +290,16 @@ def admin_dashboard():
         ).limit(100).all()
 
         # Format lead views for template
-        formatted_lead_views = []
-        for view in lead_views:
-            formatted_lead_views.append({
+        formatted_lead_views = [
+            {
                 'email': view.email,
                 'user_name': view.name,
                 'lead_index': view.lead_index,
                 'viewed_at': view.viewed_at,
                 'company_name': view.company_name or 'Unknown Company'
-            })
+            }
+            for view in lead_views
+        ]
 
         # Get summary statistics
         stats = {
@@ -314,7 +319,7 @@ def admin_dashboard():
 
     except Exception as e:
         print(f"Admin dashboard error: {e}")
-        db.session.rollback()
+        db.session.rollback()  # Ensure rollback on error
         flash('Error loading admin dashboard', 'error')
         return redirect(url_for('dashboard'))
 
