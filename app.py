@@ -249,14 +249,76 @@ def admin_dashboard():
     if not is_admin():
         return redirect(url_for('dashboard'))
     
-    users = User.query.order_by(User.created_at.desc()).all()
-    lead_views = db.session.query(
-        User.email,
-        LeadView.lead_index,
-        LeadView.viewed_at
-    ).join(User).order_by(LeadView.viewed_at.desc()).limit(100).all()
-    
-    return render_template('admin.html', users=users, lead_views=lead_views)
+    try:
+        # Get users with their view counts and latest activity
+        users_data = db.session.query(
+            User,
+            func.count(LeadView.id).label('view_count'),
+            func.max(UserSession.login_time).label('last_activity')
+        ).outerjoin(LeadView).outerjoin(UserSession).group_by(User.id).order_by(User.created_at.desc()).all()
+
+        # Format user data for template
+        users = []
+        for user, view_count, last_activity in users_data:
+            users.append({
+                'id': user.id,
+                'email': user.email,
+                'name': user.name,
+                'created_at': user.created_at,
+                'last_login': user.last_login,
+                'subscription_type': user.subscription_type,
+                'lead_view_limit': user.lead_view_limit,
+                'view_count': view_count,
+                'last_activity': last_activity
+            })
+
+        # Get recent lead views with user information
+        lead_views = db.session.query(
+            User.email,
+            User.name,
+            LeadView.lead_index,
+            LeadView.viewed_at,
+            LeadData.company_name
+        ).join(
+            User, User.id == LeadView.user_id
+        ).outerjoin(
+            LeadData, LeadData.id == LeadView.lead_index
+        ).order_by(
+            LeadView.viewed_at.desc()
+        ).limit(100).all()
+
+        # Format lead views for template
+        formatted_lead_views = []
+        for view in lead_views:
+            formatted_lead_views.append({
+                'email': view.email,
+                'user_name': view.name,
+                'lead_index': view.lead_index,
+                'viewed_at': view.viewed_at,
+                'company_name': view.company_name or 'Unknown Company'
+            })
+
+        # Get summary statistics
+        stats = {
+            'total_users': len(users),
+            'total_views': db.session.query(func.count(LeadView.id)).scalar() or 0,
+            'active_users_today': db.session.query(func.count(func.distinct(UserSession.user_id))).filter(
+                func.date(UserSession.login_time) == func.current_date()
+            ).scalar() or 0
+        }
+
+        return render_template(
+            'admin.html',
+            users=users,
+            lead_views=formatted_lead_views,
+            stats=stats
+        )
+
+    except Exception as e:
+        print(f"Admin dashboard error: {e}")
+        db.session.rollback()
+        flash('Error loading admin dashboard', 'error')
+        return redirect(url_for('dashboard'))
 
 @app.route('/admin/user/<int:user_id>')
 @login_required
