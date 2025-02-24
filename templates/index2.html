@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Leads Dashboard</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @tailwind base;
+        @tailwind components;
+        @tailwind utilities;
+    </style>
+</head>
+<script>
+    function leadsData() {
+        return {
+            searchTerm: '',
+            selectedIndustry: 'All',
+            selectedLocation: 'All',
+            selectedRow: -1,
+            showShortcuts: false,
+            currentPage: 1,
+            recordsPerPage: 25,
+            totalPages: 1,
+            filteredRows: [],
+            isInitialized: false,
+
+            initializeData() {
+                // Wait for DOM to be ready
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => this.init());
+                } else {
+                    this.init();
+                }
+            },
+
+            init() {
+                if (this.isInitialized) return;
+                this.isInitialized = true;
+
+                // Initial filtering and pagination
+                this.filterAndPaginateRecords();
+
+                // Set up event listeners
+                window.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey && e.key === '/') {
+                        e.preventDefault();
+                        this.showShortcuts = !this.showShortcuts;
+                    }
+                    if (e.ctrlKey && e.key === 'k') {
+                        e.preventDefault();
+                        this.$refs.searchInput.focus();
+                    }
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        this.selectedRow = Math.min(this.selectedRow + 1, this.filteredRows.length - 1);
+                    }
+                    if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        this.selectedRow = Math.max(this.selectedRow - 1, 0);
+                    }
+                    if (e.key === 'Enter' && this.selectedRow >= 0) {
+                        e.preventDefault();
+                        const selectedRow = this.filteredRows[this.selectedRow];
+                        if (selectedRow) {
+                            const viewLink = selectedRow.querySelector('a');
+                            if (viewLink) viewLink.click();
+                        }
+                    }
+                });
+            },
+
+            filterAndPaginateRecords() {
+                // Get all rows including those that might be hidden
+                const rows = Array.from(document.querySelectorAll('#leads-table tr'));
+                
+                // First, filter the rows
+                this.filteredRows = rows.filter(row => {
+                    const industryCell = row.querySelector('td:nth-child(3)');
+                    const locationCell = row.querySelector('td:nth-child(4)');
+                    const rowText = row.textContent.toLowerCase();
+                    
+                    const matchesSearch = rowText.includes(this.searchTerm.toLowerCase());
+                    const matchesIndustry = this.selectedIndustry === 'All' || 
+                        (industryCell && industryCell.textContent.includes(this.selectedIndustry));
+                    const matchesLocation = this.selectedLocation === 'All' || 
+                        (locationCell && locationCell.textContent.trim() === this.selectedLocation);
+                    
+                    return matchesSearch && matchesIndustry && matchesLocation;
+                });
+
+                // Calculate total pages
+                this.totalPages = Math.max(1, Math.ceil(this.filteredRows.length / this.recordsPerPage));
+                
+                // Ensure current page is valid
+                if (this.currentPage > this.totalPages) {
+                    this.currentPage = this.totalPages;
+                }
+
+                // Calculate start and end indices for current page
+                const startIndex = (this.currentPage - 1) * this.recordsPerPage;
+                const endIndex = startIndex + this.recordsPerPage;
+
+                // Show/hide rows based on pagination
+                rows.forEach((row, index) => {
+                    const rowIndex = this.filteredRows.indexOf(row);
+                    if (rowIndex === -1) {
+                        // Row didn't match filters
+                        row.style.display = 'none';
+                    } else if (rowIndex >= startIndex && rowIndex < endIndex) {
+                        // Row is on current page
+                        row.style.display = '';
+                    } else {
+                        // Row matches filters but isn't on current page
+                        row.style.display = 'none';
+                    }
+                });
+            }
+        }
+    }
+</script>
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+    <div x-data="{ 
+        searchTerm: '',
+        selectedIndustry: 'All',
+        selectedLocation: 'All',
+        selectedRow: -1,
+        showShortcuts: false,
+        currentPage: 1,
+        recordsPerPage: 25,
+        totalPages: 1,
+        filteredRows: [],
+
+        init() {
+            this.filterAndPaginateRecords();
+            window.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === '/') {
+                    e.preventDefault();
+                    this.showShortcuts = !this.showShortcuts;
+                }
+                if (e.ctrlKey && e.key === 'k') {
+                    e.preventDefault();
+                    this.$refs.searchInput.focus();
+                }
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    this.selectedRow = Math.min(this.selectedRow + 1, this.filteredRows.length - 1);
+                }
+                if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    this.selectedRow = Math.max(this.selectedRow - 1, 0);
+                }
+                if (e.key === 'Enter' && this.selectedRow >= 0) {
+                    e.preventDefault();
+                    const selectedRow = this.filteredRows[this.selectedRow];
+                    if (selectedRow) {
+                        const viewLink = selectedRow.querySelector('a');
+                        if (viewLink) viewLink.click();
+                    }
+                }
+            });
+        },
+
+        filterAndPaginateRecords() {
+            const rows = Array.from(document.querySelectorAll('#leads-table tr'));
+            
+            // First, filter the rows
+            this.filteredRows = rows.filter(row => {
+                const industryCell = row.querySelector('td:nth-child(3)');
+                const locationCell = row.querySelector('td:nth-child(4)');
+                const rowText = row.textContent.toLowerCase();
+                
+                const matchesSearch = rowText.includes(this.searchTerm.toLowerCase());
+                const matchesIndustry = this.selectedIndustry === 'All' || 
+                    (industryCell && industryCell.textContent.includes(this.selectedIndustry));
+                const matchesLocation = this.selectedLocation === 'All' || 
+                    (locationCell && locationCell.textContent.trim() === this.selectedLocation);
+                
+                return matchesSearch && matchesIndustry && matchesLocation;
+            });
+
+            // Calculate total pages
+            this.totalPages = Math.max(1, Math.ceil(this.filteredRows.length / this.recordsPerPage));
+            
+            // Ensure current page is valid
+            if (this.currentPage > this.totalPages) {
+                this.currentPage = this.totalPages;
+            }
+
+            // Calculate start and end indices for current page
+            const startIndex = (this.currentPage - 1) * this.recordsPerPage;
+            const endIndex = startIndex + this.recordsPerPage;
+
+            // Show/hide rows based on pagination
+            rows.forEach((row, index) => {
+                const rowIndex = this.filteredRows.indexOf(row);
+                if (rowIndex === -1) {
+                    // Row didn't match filters
+                    row.style.display = 'none';
+                } else if (rowIndex >= startIndex && rowIndex < endIndex) {
+                    // Row is on current page
+                    row.style.display = '';
+                } else {
+                    // Row matches filters but isn't on current page
+                    row.style.display = 'none';
+                }
+            });
+        }
+    }"
+    @keydown.escape="showShortcuts = false">
+        <!-- Keyboard Shortcuts Modal -->
+        <div x-show="showShortcuts" 
+             class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center"
+             @click.self="showShortcuts = false">
+            <div class="bg-white rounded-lg p-6 max-w-md">
+                <h3 class="text-lg font-semibold mb-4">Keyboard Shortcuts</h3>
+                <div class="space-y-2">
+                    <p><kbd class="px-2 py-1 bg-gray-100 rounded">Ctrl + K</kbd> Focus search</p>
+                    <p><kbd class="px-2 py-1 bg-gray-100 rounded">Ctrl + /</kbd> Show shortcuts</p>
+                    <p><kbd class="px-2 py-1 bg-gray-100 rounded">↑</kbd> Select previous row</p>
+                    <p><kbd class="px-2 py-1 bg-gray-100 rounded">↓</kbd> Select next row</p>
+                    <p><kbd class="px-2 py-1 bg-gray-100 rounded">Enter</kbd> View selected lead</p>
+                </div>
+            </div>
+        </div>
+
+        <header class="bg-white shadow-sm sticky top-0 z-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-4">
+                        <h1 class="text-3xl font-bold text-gray-900">Leads Dashboard</h1>
+                        <button @click="showShortcuts = true" 
+                                class="text-gray-500 hover:text-gray-700 transition-colors duration-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Search and Filter Section -->
+            <div class="mb-8 grid gap-4 md:grid-cols-3">
+                <div class="relative">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input 
+                        type="text"
+                        x-ref="searchInput"
+                        x-model="searchTerm"
+                        @input="currentPage = 1; filterAndPaginateRecords()"
+                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow duration-200"
+                        placeholder="Search leads... (Ctrl + K)"
+                    >
+                </div>
+                <select 
+                    x-model="selectedIndustry"
+                    @change="currentPage = 1; filterAndPaginateRecords()"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow duration-200"
+                >
+                    <option value="All">All Industries</option>
+                    {% for industry in unique_industries %}
+                    <option value="{{ industry }}">{{ industry }}</option>
+                    {% endfor %}
+                </select>
+                <select 
+                    x-model="selectedLocation"
+                    @change="currentPage = 1; filterAndPaginateRecords()"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow duration-200"
+                >
+                    <option value="All">All Locations</option>
+                    {% for location in unique_locations %}
+                    <option value="{{ location }}">{{ location }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Table Section -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Designation</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company Name & Industry</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leads-table" class="bg-white divide-y divide-gray-200">
+                            {% for lead in leads %}
+                            <tr class="hover:bg-gray-50 transition-colors duration-150"
+                                :class="{'bg-indigo-50': selectedRow === {{ loop.index0 }}}">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">{{ lead['First Name'] }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">{{ lead['Job Title'] }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">{{ lead['Company Name'] }}</div>
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800">{{ lead['Industry'] }}</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-gray-500">{{ lead['Country/Region'] }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <a href="/lead/{{ loop.index0 }}" 
+                                       class="inline-flex items-center px-3 py-1 border border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded transition-colors duration-200">
+                                        View
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="ml-2 w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                        </svg>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination Controls -->
+            <div class="mt-4 flex items-center justify-between">
+                <div class="text-sm text-gray-700">
+                    Showing <span x-text="((currentPage - 1) * recordsPerPage + 1)"></span> to 
+                    <span x-text="Math.min(currentPage * recordsPerPage, filteredRows.length)"></span> of 
+                    <span x-text="filteredRows.length"></span> results
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button 
+                        @click="if(currentPage > 1) { currentPage--; filterAndPaginateRecords(); }"
+                        :disabled="currentPage === 1"
+                        class="px-3 py-1 border border-gray-300 rounded-md text-sm"
+                        :class="currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'"
+                    >
+                        Previous
+                    </button>
+                    <span class="text-sm text-gray-700">Page <span x-text="currentPage"></span> of <span x-text="totalPages"></span></span>
+                    <button 
+                        @click="if(currentPage < totalPages) { currentPage++; filterAndPaginateRecords(); }"
+                        :disabled="currentPage >= totalPages"
+                        class="px-3 py-1 border border-gray-300 rounded-md text-sm"
+                        :class="currentPage >= totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'"
+                    >
+                        Next
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

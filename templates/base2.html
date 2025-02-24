@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.5/cdn.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>My Founder List - Connect with  Founders & Investors</title>
+  <style>
+    .gradient-text {
+      background: linear-gradient(45deg, #3B82F6, #10B981);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    
+    .hero-gradient {
+      background: linear-gradient(135deg, #EFF6FF 0%, #F0FDFA 100%);
+    }
+
+    .card-hover {
+      transition: all 0.3s ease;
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    .floating {
+      animation: floating 3s ease-in-out infinite;
+    }
+
+    @keyframes floating {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+
+    .company-scroll {
+      animation: scroll 20s linear infinite;
+    }
+
+    @keyframes scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <!-- Sticky Navigation -->
+  <nav class="fixed w-full bg-white/80 backdrop-blur-md z-50 shadow-sm" x-data="{ isOpen: false }">
+    <div class="container mx-auto px-4 py-3">
+      <div class="flex justify-between items-center">
+        <div class="text-2xl font-bold gradient-text">MyFounderList</div>
+        <div class="hidden md:flex space-x-6">
+          <a href="#features" class="text-gray-600 hover:text-blue-600 transition">How It Works</a>
+          <a href="#pricing" class="text-gray-600 hover:text-blue-600 transition">Pricing</a>
+          <a href="#testimonials" class="text-gray-600 hover:text-blue-600 transition">Success Stories</a>
+          <a href="#faq" class="text-gray-600 hover:text-blue-600 transition">FAQ</a>
+        </div>
+        <div class="hidden md:flex space-x-4">
+          
+          <a href="/dashboard"> <button class="px-4 py-2 text-blue-600 hover:text-blue-700 transition">Sign In</button> </a>
+          <a href="/dashboard"><button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Get Started Free</button></a>
+        </div>
+        <button @click="isOpen = !isOpen" class="md:hidden">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+      </div>
+      <!-- Mobile menu -->
+      <div x-show="isOpen" @click.away="isOpen = false" class="md:hidden mt-2">
+        <a href="#features" class="block py-2 text-gray-600 hover:text-blue-600">How It Works</a>
+        <a href="#pricing" class="block py-2 text-gray-600 hover:text-blue-600">Pricing</a>
+        <a href="#testimonials" class="block py-2 text-gray-600 hover:text-blue-600">Success Stories</a>
+        <a href="#faq" class="block py-2 text-gray-600 hover:text-blue-600">FAQ</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero-gradient pt-28 pb-20">
+    <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row items-center">
+        <div class="md:w-1/2" data-aos="fade-right">
+          <h1 class="text-4xl md:text-6xl font-bold mb-6">
+            Find & Connect with <span class="gradient-text"> Founders & Investors</span> Instantly
+          </h1>
+          <div class="space-y-4 mb-8">
+            <div class="flex items-center">
+              <svg class="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span class="text-lg">1500+ Verified Founders & Investors Contact Details</span>
+            </div>
+            <div class="flex items-center">
+              <svg class="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+              </svg>
+              <span class="text-lg">Direct Access to Email & LinkedIn Profiles</span>
+            </div>
+            <div class="flex items-center">
+              <svg class="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+              <span class="text-lg">Skip the Search—Connect Faster</span>
+            </div>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-4">
+        <a href="/dashboard"><button class="px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-lg">
+              Get Started Free
+            </button></a> 
+            <button class="px-8 py-4 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition">
+              Watch Demo
+            </button>
+          </div>
+          <div class="mt-8">
+            <p class="text-sm text-gray-600 mb-2">Founders and Investors from:</p>
+            <div class="flex flex-wrap gap-4 items-center text-gray-600">
+              <span class="font-semibold">Microsoft</span>
+              <span>•</span>
+              <span class="font-semibold">Airbnb</span>
+              <span>•</span>
+              <span class="font-semibold">Amazon</span>
+              <span>•</span>
+              <span class="font-semibold">YouTube</span>
+              <span>•</span>
+              <span class="font-semibold">Adobe</span>
+            </div>
+          </div>
+        </div>
+        <div class="md:w-1/2 mt-10 md:mt-0" data-aos="fade-left">
+          <div class="bg-white p-6 rounded-xl shadow-xl floating">
+            <img src="image.png" class="w-full rounded-lg" alt="Platform Preview">
+            <div class="mt-4">
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-semibold">Search Results</span>
+                <span class="text-sm text-gray-600">Showing 1-10 of 1500+</span>
+              </div>
+              <div class="space-y-3">
+                <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                  <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span class="font-semibold text-blue-600">JS</span>
+                  </div>
+                  <div class="ml-3">
+                    <div class="font-semibold">John Smith</div>
+                    <div class="text-sm text-gray-600">Founder & CEO, TechStart</div>
+                  </div>
+                </div>
+                <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                  <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                    <span class="font-semibold text-green-600">AR</span>
+                  </div>
+                  <div class="ml-3">
+                    <div class="font-semibold">Amanda Rodriguez</div>
+                    <div class="text-sm text-gray-600">Co-founder, DataAI</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+      <h2 class="text-3xl md:text-4xl font-bold text-center mb-16">Find the Right Founder & Investors in Seconds</h2>
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="card-hover bg-blue-50 p-6 rounded-xl" data-aos="fade-up" data-aos-delay="100">
+          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Email IDs</h3>
+          <p class="text-gray-600">Reach out directly to  founders  and investors without any intermediaries.</p>
+        </div>
+
+        <div class="card-hover bg-blue-50 p-6 rounded-xl" data-aos="fade-up" data-aos-delay="200">
+          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">LinkedIn Profiles</h3>
+          <p class="text-gray-600">Connect and network effortlessly with verified  profiles.</p>
+        </div>
+
+        <div class="card-hover bg-blue-50 p-6 rounded-xl" data-aos="fade-up" data-aos-delay="300">
+          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Company Details</h3>
+          <p class="text-gray-600">Find founders & investors relevant to your niche with detailed company information.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison Section -->
+  <section class="py-20 bg-gray-50">
+    <div class="container mx-auto px-4">
+      <h2 class="text-3xl md:text-4xl font-bold text-center mb-16">Why My Founder List?</h2>
+      <div class="max-w-4xl mx-auto">
+        <div class="grid md:grid-cols-2 gap-8">
+          <div class="bg-white p-6 rounded-xl shadow-lg">
+            <h3 class="text-xl font-semibold mb-4 text-red-600">🚫 Old Way</h3>
+            <ul class="space-y-4">
+              <li class="flex items-center text-gray-600">
+                <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                Manually searching for startup founders & investors
+              </li>
+              <li class="flex items-center text-gray-600">
+                <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                Sending random LinkedIn requests
+              </li>
+              <li class="flex items-center text-gray-600">
+                <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                Struggling to find the right connections
+              </li>
+              <li class="flex items-center text-gray-600">
+                <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                Wasting time on generic contact forms
+              </li>
+            </ul>
+          </div>
+          <div class="bg-white p-6 rounded-xl shadow-lg">
+            <h3 class="text-xl font-semibold mb-4 text-green-600">✅ With My Founder List</h3>
+            <ul class="space-y-4">
+              <li class="flex items-center text-gray-600">
+                <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Instant access to verified founder contacts
+              </li>
+              <li class="flex items-center text-gray-600">
+                <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Direct email & LinkedIn profile access
+              </li>
+              <li class="flex items-center text-gray-600">
+                <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Smart search & filtering to find the perfect match
+              </li>
+              <li class="flex items-center text-gray-600">
+                <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Reach out directly—no middlemen, no delays
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+      <h2 class="text-3xl md:text-4xl font-bold text-center mb-16">How It Works</h2>
+      <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div class="text-center" data-aos="fade-up" data-aos-delay="100">
+          <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span class="text-2xl text-blue-600">1</span>
+          </div>
+          <h3 class="text-xl font-semibold mb-4">Sign Up & Unlock</h3>
+          <p class="text-gray-600">Search & filter 1500+ startup founders & investors instantly by industry, location, and company size.</p>
+        </div>
+        <div class="text-center" data-aos="fade-up" data-aos-delay="200">
+          <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span class="text-2xl text-blue-600">2</span>
+          </div>
+          <h3 class="text-xl font-semibold mb-4">Connect Directly</h3>
+          <p class="text-gray-600">Get email IDs & LinkedIn profiles—reach out in just one click to start conversations.</p>
+        </div>
+        <div class="text-center" data-aos="fade-up" data-aos-delay="300">
+          <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span class="text-2xl text-blue-600">3</span>
+          </div>
+          <h3 class="text-xl font-semibold mb-4">Expand Your Network</h3>
+          <p class="text-gray-600">Find co-founders, business partners, investors , or collaborators effortlessly and grow your network.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section id="pricing" class="py-20 bg-gray-50">
+    <div class="container mx-auto px-4">
+      <h2 class="text-3xl md:text-4xl font-bold text-center mb-16">Simple, Transparent Pricing</h2>
+      <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <!-- Free Plan -->
+        <div class="card-hover bg-white rounded-xl shadow-lg p-8" data-aos="fade-up" data-aos-delay="100">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-semibold">Starter</h3>
+            <span class="px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-sm">Free Forever</span>
+          </div>
+          <div class="mb-6">
+            <span class="text-4xl font-bold">₹0</span>
+            <span class="text-gray-600">/month</span>
+          </div>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center text-gray-600">
+              <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Full search & filtering
+            </li>
+            <li class="flex items-center text-gray-600">
+              <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              View founder profiles
+            </li>
+            <li class="flex items-center text-gray-600">
+              <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Browse 50+ industries
+            </li>
+          </ul>
+          <button class="w-full py-3 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition">
+            Start for Free
+          </button>
+        </div>
+
+        <!-- Pro Plan -->
+        <div class="card-hover bg-blue-600 rounded-xl shadow-xl p-8 transform scale-105 relative" data-aos="fade-up" data-aos-delay="200">
+          <div class="absolute -top-4 right-4 bg-green-500 text-white px-4 py-1 rounded-full text-sm">
+            Most Popular
+          </div>
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-semibold text-white">Pro</h3>
+          </div>
+          <div class="mb-6">
+            <span class="text-4xl font-bold text-white">₹999</span>
+            <span class="text-blue-100">/month</span>
+          </div>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center text-white">
+              <svg class="w-5 h-5 text-green-300 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Everything in Free
+            </li>
+            <li class="flex items-center text-white">
+              <svg class="w-5 h-5 text-green-300 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              50 profile views/month
+            </li>
+            <li class="flex items-center text-white">
+              <svg class="w-5 h-5 text-green-300 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              50 email & LinkedIn views
+            </li>
+            <li class="flex items-center text-white">
+              <svg class="w-5 h-5 text-green-300 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Exclusive networking group
+            </li>
+          </ul>
+          <button class="w-full py-3 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition">
+            Upgrade to Pro
+          </button>
+        </div>
+
+        <!-- Pro+ Plan -->
+        <div class="card-hover bg-white rounded-xl shadow-lg p-8" data-aos="fade-up" data-aos-delay="300">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-semibold">Pro+</h3>
+            <span class="px-3 py-1 bg-purple-100 text-purple-600 rounded-full text-sm">Premium</span>
+          </div>
+          <div class="mb-6">
+            <span class="text-4xl font-bold">₹2999</span>
+            <span class="text-gray-600">/month</span>
+          </div>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center text-gray-600">
+              <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Everything in Pro
+            </li>
+            <li class="flex items-center text-gray-600">
+              <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              300 profile views/month
+            </li>
+            <li class="flex items-center text-gray-600">
+              <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              300 email & LinkedIn views
+            </li>
+            <li class="flex items-center text-gray-600">
+              <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Exclusive events access
+            </li>
+          </ul>
+          <button class="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+            Go Pro+
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Success Stories Section -->
+  <section id="testimonials" class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+      <h2 class="text-3xl md:text-4xl font-bold text-center mb-16">Success Stories</h2>
+      <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div class="bg-blue-50 p-6 rounded-xl" data-aos="fade-up" data-aos-delay="100">
+          <div class="flex items-center mb-4">
+            <img src="/api/placeholder/48/48" alt="Ankit Sharma" class="w-12 h-12 rounded-full">
+            <div class="ml-4">
+              <h4 class="font-semibold">Ankit Sharma</h4>
+              <p class="text-sm text-gray-600">Founder of TechNova</p>
+            </div>
+          </div>
+          <p class="text-gray-600">"I found the perfect co-founder for my startup in minutes. My Founder List saved me weeks of searching!"</p>
+        </div>
+        
+        <div class="bg-blue-50 p-6 rounded-xl" data-aos="fade-up" data-aos-delay="200">
+          <div class="flex items-center mb-4">
+            <img src="/api/placeholder/48/48" alt="Ritika Verma" class="w-12 h-12 rounded-full">
+            <div class="ml-4">
+              <h4 class="font-semibold">Ritika Verma</h4>
+              <p class="text-sm text-gray-600">Growth Marketer</p>
+            </div>
+          </div>
+          <p class="text-gray-600">"Reaching out to startup founders has never been easier. This tool is a game-changer!"</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section id="faq" class="py-20 bg-gray-50">
+    <div class="container mx-auto px-4">
+      <h2 class="text-3xl md:text-4xl font-bold text-center mb-16">Frequently Asked Questions</h2>
+      <div class="max-w-3xl mx-auto space-y-6">
+        <div class="bg-white p-6 rounded-xl shadow-sm">
+          <h3 class="text-lg font-semibold mb-2">What information is available for each founder?</h3>
+          <p class="text-gray-600">You'll get email IDs, LinkedIn profiles, company name, and industry details.</p>
+        </div>
+        
+        <div class="bg-white p-6 rounded-xl shadow-sm">
+          <h3 class="text-lg font-semibold mb-2">Who should use My Founder List?</h3>
+          <p class="text-gray-600">Entrepreneurs, professionals, and businesses looking to connect with startup founders easily.</p>
+        </div>
+        
+        <div class="bg-white p-6 rounded-xl shadow-sm">
+          <h3 class="text-lg font-semibold mb-2">How do I contact the founders?</h3>
+          <p class="text-gray-600">Use the provided email or LinkedIn link to reach out directly.</p>
+        </div>
+        
+        <div class="bg-white p-6 rounded-xl shadow-sm">
+          <h3 class="text-lg font-semibold mb-2">Is this platform for investors?</h3>
+          <p class="text-gray-600">No, this platform is for anyone looking to connect with startup founders, whether for partnerships, networking, or hiring.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-20 bg-blue-600 text-white">
+    <div class="container mx-auto px-4 text-center">
+      <h2 class="text-3xl md:text-4xl font-bold mb-8">Ready to Connect with Founders?</h2>
+      <p class="text-xl mb-8">Join 1500+ Users Who Are Finding the Right Startup Contacts</p>
+      <button class="px-8 py-4 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition shadow-lg">
+        Start Connecting Now
+      </button>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-gray-300 py-12">
+    <div class="container mx-auto px-4">
+      <div class="grid md:grid-cols-4 gap-8">
+        <div>
+          <h3 class="text-xl font-bold gradient-text mb-4">My Founder List</h3>
+          <p class="text-sm">Built with ❤️ by entrepreneurs, for entrepreneurs.</p>
+        </div>
+        
+        <div>
+          <h4 class="font-semibold mb-4">Quick Links</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="hover:text-white transition">Home</a></li>
+            <li><a href="#features" class="hover:text-white transition">Features</a></li>
+            <li><a href="#pricing" class="hover:text-white transition">Pricing</a></li>
+            <li><a href="#testimonials" class="hover:text-white transition">Success Stories</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="font-semibold mb-4">Legal</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="hover:text-white transition">Privacy Policy</a></li>
+            <li><a href="#" class="hover:text-white transition">Terms & Conditions</a></li>
+            <li><a href="#" class="hover:text-white transition">Refund Policy</a></li>
+            <li><a href="#" class="hover:text-white transition">Cancellation Policy</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="font-semibold mb-4">Contact</h4>
+          <ul class="space-y-2">
+            <li>Email: support@myfounderlist.com</li>
+            <li>Phone: +91 XXX XXX XXXX</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="border-t border-gray-800 mt-12 pt-8 text-center">
+        <p>&copy; 2025 My Founder List. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Initialize AOS
+    AOS.init({
+      duration: 800,
+      offset: 100,
+      once: true
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+{# user_detail.html #}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Details</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h1 class="text-2xl font-bold mb-4">User Details</h1>
+            
+            <!-- User Information -->
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold mb-2">Basic Information</h2>
+                <p><strong>Email:</strong> {{ analytics.user.email }}</p>
+                <p><strong>Name:</strong> {{ analytics.user.name }}</p>
+                <p><strong>Created:</strong> {{ analytics.user.created_at }}</p>
+                <p><strong>Last Login:</strong> {{ analytics.user.last_login }}</p>
+                <p><strong>Subscription:</strong> {{ analytics.user.subscription_type }}</p>
+                <p><strong>Lead View Limit:</strong> {{ analytics.user.lead_view_limit }}</p>
+            </div>
+
+            <!-- Subscription Update Form -->
+            <div class="mb-6 p-4 bg-gray-50 rounded">
+                <h2 class="text-xl font-semibold mb-2">Update Subscription</h2>
+                <form action="{{ url_for('admin_update_subscription') }}" method="POST">
+                    <input type="hidden" name="user_id" value="{{ analytics.user.id }}">
+                    
+                    <div class="mb-4">
+                        <label class="block mb-2">Subscription Type:</label>
+                        <select name="subscription_type" class="w-full p-2 border rounded">
+                            <option value="free" {% if analytics.user.subscription_type == 'free' %}selected{% endif %}>Free</option>
+                            <option value="basic" {% if analytics.user.subscription_type == 'basic' %}selected{% endif %}>Basic</option>
+                            <option value="pro" {% if analytics.user.subscription_type == 'pro' %}selected{% endif %}>Pro</option>
+                            <option value="enterprise" {% if analytics.user.subscription_type == 'enterprise' %}selected{% endif %}>Enterprise</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block mb-2">View Limit:</label>
+                        <input type="number" name="view_limit" value="{{ analytics.user.lead_view_limit }}" class="w-full p-2 border rounded">
+                    </div>
+                    
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Update Subscription</button>
+                </form>
+            </div>
+
+            <!-- Lead View History -->
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold mb-2">Lead View History</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="px-4 py-2 border">Lead Index</th>
+                                <th class="px-4 py-2 border">Company Name</th>
+                                <th class="px-4 py-2 border">Viewed At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for view in analytics.lead_views %}
+                            <tr>
+                                <td class="px-4 py-2 border">{{ view.lead_index }}</td>
+                                <td class="px-4 py-2 border">{{ view.Company_Name or 'N/A' }}</td>
+                                <td class="px-4 py-2 border">{{ view.viewed_at }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Session History -->
+            <div>
+                <h2 class="text-xl font-semibold mb-2">Session History</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="px-4 py-2 border">Login Time</th>
+                                <th class="px-4 py-2 border">Logout Time</th>
+                                <th class="px-4 py-2 border">Duration</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in analytics.sessions %}
+                            <tr>
+                                <td class="px-4 py-2 border">{{ session.login_time }}</td>
+                                <td class="px-4 py-2 border">{{ session.logout_time or 'Active' }}</td>
+                                <td class="px-4 py-2 border">
+                                    {% if session.logout_time %}
+                                        {{ ((session.logout_time|datetime) - (session.login_time|datetime)).total_seconds()|round|int }} seconds
+                                    {% else %}
+                                        Active Session
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
