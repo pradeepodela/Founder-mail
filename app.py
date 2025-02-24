@@ -471,8 +471,11 @@ def is_admin():
     # For demo purposes, you might want to hardcode some admin emails
     admin_emails = ['odelapradeep12@gmail.com', 'your_email@gmail.com']
     if session["user"]["email"] in admin_emails:
+        print(f'Admin:{session["user"]["email"]}')
         return True
-    return False
+    else:
+        print(session["user"]["email"])
+        return False
 # Initialize database tables
 def init_db():
     with app.app_context():
