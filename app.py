@@ -81,12 +81,7 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def is_admin():
-    # For demo purposes, you might want to hardcode some admin emails
-    admin_emails = ['odelapradeep12@gmail.com', 'your_email@gmail.com']
-    if "user" in session and session["user"]["email"] in admin_emails:
-        return True
-    return False
+
 
 def record_login(email, name):
     now = datetime.utcnow()
@@ -472,7 +467,12 @@ def not_found_error(error):
 def internal_error(error):
     db.session.rollback()
     return render_template('500.html'), 500
-
+def is_admin():
+    # For demo purposes, you might want to hardcode some admin emails
+    admin_emails = ['odelapradeep12@gmail.com', 'your_email@gmail.com']
+    if "user" in session and session["user"]["email"] in admin_emails:
+        return True
+    return False
 # Initialize database tables
 def init_db():
     with app.app_context():
