@@ -82,8 +82,11 @@ def login_required(f):
     return decorated_function
 
 def is_admin():
+    # For demo purposes, you might want to hardcode some admin emails
     admin_emails = ['odelapradeep12@gmail.com', 'your_email@gmail.com']
-    return "user" in session and session["user"]["email"] in admin_emails
+    if "user" in session and session["user"]["email"] in admin_emails:
+        return True
+    return False
 
 def record_login(email, name):
     now = datetime.utcnow()
