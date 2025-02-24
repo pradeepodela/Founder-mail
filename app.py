@@ -470,7 +470,7 @@ def internal_error(error):
 def is_admin():
     # For demo purposes, you might want to hardcode some admin emails
     admin_emails = ['odelapradeep12@gmail.com', 'your_email@gmail.com']
-    if "user" in session and session["user"]["email"] in admin_emails:
+    if session["user"]["email"] in admin_emails:
         return True
     return False
 # Initialize database tables
