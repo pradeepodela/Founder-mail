@@ -9,19 +9,55 @@ import os
 import pathlib
 import requests
 from functools import wraps
-import sqlite3
 from datetime import datetime
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.sql import func
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key'  # Replace with a secure secret key
+
+# PostgreSQL Database Configuration
+DATABASE_URL = "postgresql://neondb_owner:npg_sjMR1fNZUPO6@ep-still-pine-a8lzrh1e-pooler.eastus2.azure.neon.tech/neondb?sslmode=require"  # Replace with your PostgreSQL credentials
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+
+# Models
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    name = db.Column(db.String(120))
+    created_at = db.Column(db.DateTime, default=func.now())
+    last_login = db.Column(db.DateTime)
+    subscription_type = db.Column(db.String(20), default='free')
+    lead_view_limit = db.Column(db.Integer, default=5)
+    
+    lead_views = db.relationship('LeadView', backref='user', lazy=True)
+    sessions = db.relationship('UserSession', backref='user', lazy=True)
+
+class LeadView(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    lead_index = db.Column(db.Integer, nullable=False)
+    viewed_at = db.Column(db.DateTime, default=func.now())
+
+class UserSession(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    login_time = db.Column(db.DateTime, default=func.now())
+    logout_time = db.Column(db.DateTime)
+
+class LeadData(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    company_name = db.Column(db.String(200))
+    industry = db.Column(db.String(100))
+    description = db.Column(db.Text)
 
 # Google OAuth2 configuration
 GOOGLE_CLIENT_ID = "45595925952-kpjdqmr8lvvkng06o6nigohhuoac1gre.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET = "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"
 GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
-@app.template_filter('datetime')
-def parse_datetime(value):
-    return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
 
 # OAuth2 configuration
 client_secrets_file = "./cred.json"  
@@ -35,9 +71,6 @@ flow = Flow.from_client_secrets_file(
     redirect_uri="https://foundersmail.vercel.app/callback"
 )
 
-db_path = "database.db"
-
-# Default view limit for free users
 DEFAULT_VIEW_LIMIT = 5
 
 def login_required(f):
@@ -49,165 +82,73 @@ def login_required(f):
     return decorated_function
 
 def is_admin():
-    # For demo purposes, you might want to hardcode some admin emails
     admin_emails = ['odelapradeep12@gmail.com', 'your_email@gmail.com']
-    if "user" in session and session["user"]["email"] in admin_emails:
-        return True
-    return False
-
-def get_db():
-    db = getattr(g, '_database', None)
-    if db is None:
-        db = g._database = sqlite3.connect(db_path, check_same_thread=False)
-        db.row_factory = sqlite3.Row  # This allows access to columns by name
-    return db
-
-def init_db():
-    with app.app_context():
-        db = get_db()
-        cursor = db.cursor()
-        cursor.execute('''CREATE TABLE IF NOT EXISTS users (
-                            id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            email TEXT UNIQUE,
-                            name TEXT,
-                            created_at TEXT,
-                            last_login TEXT,
-                            subscription_type TEXT DEFAULT 'free',
-                            lead_view_limit INTEGER DEFAULT 5)''')
-        cursor.execute('''CREATE TABLE IF NOT EXISTS lead_views (
-                            id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            user_id INTEGER,
-                            lead_index INTEGER,
-                            viewed_at TEXT,
-                            FOREIGN KEY (user_id) REFERENCES users(id))''')
-        cursor.execute('''CREATE TABLE IF NOT EXISTS user_sessions (
-                            id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            user_id INTEGER,
-                            login_time TEXT,
-                            logout_time TEXT,
-                            FOREIGN KEY (user_id) REFERENCES users(id))''')
-        # Create leads_data table if it doesn't exist
-        cursor.execute('''CREATE TABLE IF NOT EXISTS leads_data (
-                            id INTEGER PRIMARY KEY,
-                            Company_Name TEXT,
-                            Industry TEXT,
-                            Description TEXT)''')
-        db.commit()
+    return "user" in session and session["user"]["email"] in admin_emails
 
 def record_login(email, name):
-    db = get_db()
-    cursor = db.cursor()
-    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-    
-    # Check if user exists
-    cursor.execute("SELECT id FROM users WHERE email = ?", (email,))
-    user = cursor.fetchone()
+    now = datetime.utcnow()
+    user = User.query.filter_by(email=email).first()
     
     if user:
-        # Update existing user
-        cursor.execute("UPDATE users SET last_login = ? WHERE email = ?", (now, email))
-        user_id = user[0]
+        user.last_login = now
+        user_id = user.id
     else:
-        # Create new user with default settings
-        cursor.execute("INSERT INTO users (email, name, created_at, last_login, subscription_type, lead_view_limit) VALUES (?, ?, ?, ?, 'free', ?)",
-                      (email, name, now, now, DEFAULT_VIEW_LIMIT))
-        user_id = cursor.lastrowid
+        user = User(email=email, name=name, last_login=now)
+        db.session.add(user)
+        db.session.flush()
+        user_id = user.id
     
-    # Record the login session
-    cursor.execute("INSERT INTO user_sessions (user_id, login_time) VALUES (?, ?)", (user_id, now))
+    session = UserSession(user_id=user_id)
+    db.session.add(session)
+    db.session.commit()
     
-    db.commit()
     return user_id
 
 def record_logout(user_id):
     if user_id:
-        db = get_db()
-        cursor = db.cursor()
-        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        session = UserSession.query.filter_by(
+            user_id=user_id, 
+            logout_time=None
+        ).order_by(UserSession.login_time.desc()).first()
         
-        # First, find the latest session ID that needs to be updated
-        cursor.execute("""
-            SELECT id FROM user_sessions 
-            WHERE user_id = ? AND logout_time IS NULL
-            ORDER BY login_time DESC LIMIT 1
-        """, (user_id,))
-        
-        session_row = cursor.fetchone()
-        if session_row:
-            # Then update that specific session
-            cursor.execute("""
-                UPDATE user_sessions 
-                SET logout_time = ?
-                WHERE id = ?
-            """, (now, session_row[0]))
-            
-        db.commit()
+        if session:
+            session.logout_time = datetime.utcnow()
+            db.session.commit()
 
 def record_lead_view(user_id, lead_index):
-    db = get_db()
-    cursor = db.cursor()
-    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-    cursor.execute("INSERT INTO lead_views (user_id, lead_index, viewed_at) VALUES (?, ?, ?)",
-                   (user_id, lead_index, now))
-    db.commit()
+    lead_view = LeadView(user_id=user_id, lead_index=lead_index)
+    db.session.add(lead_view)
+    db.session.commit()
 
 def get_user_lead_views_count(user_id):
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("SELECT COUNT(*) FROM lead_views WHERE user_id = ?", (user_id,))
-    count = cursor.fetchone()[0]
-    return count
+    return LeadView.query.filter_by(user_id=user_id).count()
 
 def get_user_view_limit(user_id):
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("SELECT lead_view_limit FROM users WHERE id = ?", (user_id,))
-    result = cursor.fetchone()
-    
-    if result is None:
-        # Return default view limit if user not found
-        return DEFAULT_VIEW_LIMIT
-    
-    return result[0]
+    user = User.query.get(user_id)
+    return user.lead_view_limit if user else DEFAULT_VIEW_LIMIT
 
 def update_user_subscription(user_id, subscription_type, view_limit):
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("UPDATE users SET subscription_type = ?, lead_view_limit = ? WHERE id = ?",
-                  (subscription_type, view_limit, user_id))
-    db.commit()
+    user = User.query.get(user_id)
+    if user:
+        user.subscription_type = subscription_type
+        user.lead_view_limit = view_limit
+        db.session.commit()
 
 def get_user_analytics(user_id):
-    db = get_db()
-    cursor = db.cursor()
+    user = User.query.get(user_id)
+    if not user:
+        return None
     
-    # Get basic user info
-    cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
-    user = cursor.fetchone()
-    
-    # Get session history
-    cursor.execute("SELECT login_time, logout_time FROM user_sessions WHERE user_id = ? ORDER BY login_time DESC", (user_id,))
-    sessions = cursor.fetchall()
-    
-    # Get lead view history - check if leads_data table exists first
-    try:
-        cursor.execute("""
-            SELECT lv.lead_index, lv.viewed_at, ld.Company_Name 
-            FROM lead_views lv
-            LEFT JOIN leads_data ld ON lv.lead_index = ld.id
-            WHERE lv.user_id = ? 
-            ORDER BY lv.viewed_at DESC
-        """, (user_id,))
-        lead_views = cursor.fetchall()
-    except sqlite3.OperationalError:
-        # If leads_data doesn't exist or join fails
-        cursor.execute("""
-            SELECT lead_index, viewed_at, NULL as Company_Name
-            FROM lead_views
-            WHERE user_id = ?
-            ORDER BY viewed_at DESC
-        """, (user_id,))
-        lead_views = cursor.fetchall()
+    sessions = UserSession.query.filter_by(user_id=user_id).order_by(UserSession.login_time.desc()).all()
+    lead_views = db.session.query(
+        LeadView, LeadData.company_name
+    ).outerjoin(
+        LeadData, LeadView.lead_index == LeadData.id
+    ).filter(
+        LeadView.user_id == user_id
+    ).order_by(
+        LeadView.viewed_at.desc()
+    ).all()
     
     return {
         'user': user,
@@ -223,34 +164,20 @@ def load_leads(file_path):
         df['Description'] = df['Description'].fillna("No description available")
         df['Short Description'] = df['Description'].apply(lambda x: x[:50] + "..." if len(x) > 50 else x)
         
-        # Store lead data in database for reference
-        db = get_db()
-        cursor = db.cursor()
+        # Clear existing data
+        LeadData.query.delete()
         
-        # Check if table exists before attempting operation
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='leads_data'")
-        table_exists = cursor.fetchone() is not None
-        
-        if table_exists:
-            # Clear existing data
-            cursor.execute("DELETE FROM leads_data")
-        else:
-            # Create table if it doesn't exist
-            cursor.execute("""
-                CREATE TABLE leads_data (
-                    id INTEGER PRIMARY KEY,
-                    Company_Name TEXT,
-                    Industry TEXT,
-                    Description TEXT
-                )
-            """)
-        
-        # Insert lead data
+        # Insert new data
         for idx, row in df.iterrows():
-            cursor.execute("INSERT INTO leads_data VALUES (?, ?, ?, ?)",
-                        (idx, row['Company Name'], row['Industry'], row['Description']))
+            lead = LeadData(
+                id=idx,
+                company_name=row['Company Name'],
+                industry=row['Industry'],
+                description=row['Description']
+            )
+            db.session.add(lead)
         
-        db.commit()
+        db.session.commit()
         
         leads = df.to_dict(orient='records')
         for i, lead in enumerate(leads):
@@ -262,19 +189,10 @@ def load_leads(file_path):
             "latest_added": "Today"
         }
         return leads, stats
-    except FileNotFoundError:
-        # Return empty data if file not found
-        return [], {"total_leads": 0, "common_industry": "None", "latest_added": "None"}
     except Exception as e:
-        # Log the error and return empty data
         print(f"Error loading leads: {e}")
         return [], {"total_leads": 0, "common_industry": "None", "latest_added": "Error"}
 
-@app.teardown_appcontext
-def close_connection(exception):
-    db = getattr(g, '_database', None)
-    if db is not None:
-        db.close()
 
 @app.route('/')
 def index():
