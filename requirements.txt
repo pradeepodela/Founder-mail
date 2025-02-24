@@ -1,7 +1,7 @@
 Flask
 pandas
-google-auth-oauthlib
-google-auth
+google-auth-oauthlib==1.2.1
+google-auth==2.36.0
 requests
-cachecontrol
-sqlite3
+CacheControl
+db-sqlite3
