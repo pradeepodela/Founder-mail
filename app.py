@@ -532,8 +532,4 @@ def analytics():
 
 # Initialize the database at startup
 init_db()
-
-if __name__ == '__main__':
-    # When running locally, disable OAuthlib's HTTPS verification
-    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
-    app.run(debug=True)
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
