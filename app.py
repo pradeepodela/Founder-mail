@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, g, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 import pandas as pd
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
@@ -17,7 +17,7 @@ app = Flask(__name__)
 app.secret_key = 'your-secret-key'  # Replace with a secure secret key
 
 # PostgreSQL Database Configuration
-DATABASE_URL = "postgresql://neondb_owner:npg_sjMR1fNZUPO6@ep-still-pine-a8lzrh1e-pooler.eastus2.azure.neon.tech/neondb?sslmode=require"  # Replace with your PostgreSQL credentials
+DATABASE_URL = "postgresql://neondb_owner:npg_sjMR1fNZUPO6@ep-still-pine-a8lzrh1e-pooler.eastus2.azure.neon.tech/neondb?sslmode=require"
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -55,12 +55,12 @@ class LeadData(db.Model):
     description = db.Column(db.Text)
 
 # Google OAuth2 configuration
-GOOGLE_CLIENT_ID = "45595925952-kpjdqmr8lvvkng06o6nigohhuoac1gre.apps.googleusercontent.com"
-GOOGLE_CLIENT_SECRET = "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"
+GOOGLE_CLIENT_ID = "your-client-id"  # Replace with your actual client ID
+GOOGLE_CLIENT_SECRET = "your-client-secret"  # Replace with your actual client secret
 GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
 
 # OAuth2 configuration
-client_secrets_file = "./cred.json"  
+client_secrets_file = os.path.join(os.path.dirname(__file__), "cred.json")
 flow = Flow.from_client_secrets_file(
     client_secrets_file=client_secrets_file,
     scopes=[
@@ -193,7 +193,6 @@ def load_leads(file_path):
         print(f"Error loading leads: {e}")
         return [], {"total_leads": 0, "common_industry": "None", "latest_added": "Error"}
 
-
 @app.route('/')
 def index():
     if "user" in session:
@@ -232,7 +231,6 @@ def callback():
     
     if response.ok:
         user_info = response.json()
-        # Record login and get user_id
         user_id = record_login(user_info["email"], user_info.get("name", ""))
         
         session["user"] = {
@@ -251,27 +249,12 @@ def admin_dashboard():
     if not is_admin():
         return redirect(url_for('dashboard'))
     
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("""
-        SELECT u.id, u.email, u.name, u.created_at, u.last_login, 
-               u.subscription_type, u.lead_view_limit,
-               COUNT(lv.id) as view_count
-        FROM users u
-        LEFT JOIN lead_views lv ON u.id = lv.user_id
-        GROUP BY u.id
-        ORDER BY u.created_at DESC
-    """)
-    users = cursor.fetchall()
-    
-    cursor.execute("""
-        SELECT u.email, lv.lead_index, lv.viewed_at
-        FROM lead_views lv
-        JOIN users u ON lv.user_id = u.id
-        ORDER BY lv.viewed_at DESC
-        LIMIT 100
-    """)
-    lead_views = cursor.fetchall()
+    users = User.query.order_by(User.created_at.desc()).all()
+    lead_views = db.session.query(
+        User.email,
+        LeadView.lead_index,
+        LeadView.viewed_at
+    ).join(User).order_by(LeadView.viewed_at.desc()).limit(100).all()
     
     return render_template('admin.html', users=users, lead_views=lead_views)
 
@@ -282,7 +265,6 @@ def admin_user_detail(user_id):
         return redirect(url_for('dashboard'))
     
     analytics = get_user_analytics(user_id)
-    
     return render_template('user_detail.html', analytics=analytics)
 
 @app.route('/admin/update_subscription', methods=['POST'])
@@ -291,12 +273,13 @@ def admin_update_subscription():
     if not is_admin():
         return redirect(url_for('dashboard'))
     
-    user_id = request.form.get('user_id')
+    user_id = request.form.get('user_id', type=int)
     subscription_type = request.form.get('subscription_type')
-    view_limit = request.form.get('view_limit')
+    view_limit = request.form.get('view_limit', type=int)
     
-    update_user_subscription(user_id, subscription_type, view_limit)
-    flash('User subscription updated successfully')
+    if user_id and subscription_type and view_limit:
+        update_user_subscription(user_id, subscription_type, view_limit)
+        flash('User subscription updated successfully')
     
     return redirect(url_for('admin_user_detail', user_id=user_id))
 
@@ -319,13 +302,9 @@ def dashboard():
     view_count = get_user_lead_views_count(user_id)
     view_limit = get_user_view_limit(user_id)
     
-    # Get list of viewed lead indices for this user
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("SELECT DISTINCT lead_index FROM lead_views WHERE user_id = ?", (user_id,))
-    viewed_indices = {row[0] for row in cursor.fetchall()}
+    viewed_leads = LeadView.query.filter_by(user_id=user_id).with_entities(LeadView.lead_index).all()
+    viewed_indices = {view.lead_index for view in viewed_leads}
     
-    # Filter leads based on search query and viewed status
     filtered_leads = []
     for lead in leads:
         if show_viewed_only and lead['index'] not in viewed_indices:
@@ -347,35 +326,24 @@ def dashboard():
                          view_limit=view_limit,
                          viewed_indices=viewed_indices,
                          show_viewed_only=show_viewed_only)
+
 @app.route('/lead/<int:index>')
 @login_required
 def lead_profile(index):
     user_id = session["user"]["id"]
     
-    # Check if user has already viewed this lead
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("SELECT id FROM lead_views WHERE user_id = ? AND lead_index = ?", (user_id, index))
-    already_viewed = cursor.fetchone() is not None
-    
-    # Get user's view count and limit
+    already_viewed = LeadView.query.filter_by(user_id=user_id, lead_index=index).first() is not None
     view_count = get_user_lead_views_count(user_id)
     view_limit = get_user_view_limit(user_id)
     
-    # Allow access if either:
-    # 1. User hasn't reached their limit, or
-    # 2. User has already viewed this lead
     if view_count < view_limit or already_viewed:
         leads, _ = load_leads('Untitled spreadsheet - CSP_Main sheet.csv')
         if leads and 0 <= index < len(leads):
             lead = leads[index]
-            # Only record the view if it's the first time viewing
             if not already_viewed:
                 record_lead_view(user_id, index)
             return render_template('lead.html', lead=lead, user=session['user'])
         return "Lead not found", 404
-    else:
-        return redirect(url_for('pricing'))
     
     return redirect(url_for('pricing'))
 
@@ -388,66 +356,75 @@ def pricing():
 @login_required
 def subscribe():
     plan = request.form.get('plan')
-    
-    # In a real app, you'd process payment here
-    # For this demo, we'll just update the user's subscription
-    
     user_id = session["user"]["id"]
     
-    if plan == 'basic':
-        update_user_subscription(user_id, 'basic', 25)
-    elif plan == 'pro':
-        update_user_subscription(user_id, 'pro', 100)
-    elif plan == 'enterprise':
-        update_user_subscription(user_id, 'enterprise', 9999)
+    plan_limits = {
+        'basic': 25,
+        'pro': 100,
+        'enterprise': 9999
+    }
     
-    flash('Subscription updated successfully!')
+    if plan in plan_limits:
+        update_user_subscription(user_id, plan, plan_limits[plan])
+        flash('Subscription updated successfully!')
+    
     return redirect(url_for('dashboard'))
 
-# Analytics routes
 @app.route('/analytics')
 @login_required
 def analytics():
     if not is_admin():
         return redirect(url_for('dashboard'))
     
-    db = get_db()
-    cursor = db.cursor()
-    
     # User growth over time
-    cursor.execute("""
-        SELECT strftime('%Y-%m', created_at) as month, COUNT(*) as new_users
-        FROM users
-        GROUP BY month
-        ORDER BY month
-    """)
-    user_growth = cursor.fetchall()
+    user_growth = db.session.query(
+        func.date_trunc('month', User.created_at).label('month'),
+        func.count(User.id).label('new_users')
+    ).group_by('month').order_by('month').all()
     
     # Most viewed leads
-    cursor.execute("""
-        SELECT lead_index, COUNT(*) as view_count
-        FROM lead_views
-        GROUP BY lead_index
-        ORDER BY view_count DESC
-        LIMIT 10
-    """)
-    popular_leads = cursor.fetchall()
-    
+    popular_leads = db.session.query(
+        LeadView.lead_index,
+        func.count(LeadView.id).label('view_count')
+    ).group_by(LeadView.lead_index).order_by(func.count(LeadView.id).desc()).limit(10).all()
     # Active users by day
-    cursor.execute("""
-        SELECT strftime('%Y-%m-%d', login_time) as day, COUNT(DISTINCT user_id) as active_users
-        FROM user_sessions
-        GROUP BY day
-        ORDER BY day DESC
-        LIMIT 30
-    """)
-    active_users = cursor.fetchall()
+    active_users = db.session.query(
+        func.date_trunc('day', UserSession.login_time).label('day'),
+        func.count(func.distinct(UserSession.user_id)).label('active_users')
+    ).group_by('day').order_by('day').limit(30).all()
     
     return render_template('analytics.html', 
                           user_growth=user_growth, 
                           popular_leads=popular_leads,
                           active_users=active_users)
 
-# Initialize the database at startup
+# Error handlers
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('404.html'), 404
 
+@app.errorhandler(500)
+def internal_error(error):
+    db.session.rollback()
+    return render_template('500.html'), 500
+
+# Initialize database tables
+def init_db():
+    with app.app_context():
+        # Create all database tables
+        db.create_all()
+        
+        # Check if admin user exists, if not create one
+        admin_email = 'odelapradeep12@gmail.com'
+        admin = User.query.filter_by(email=admin_email).first()
+        if not admin:
+            admin = User(
+                email=admin_email,
+                name='Admin',
+                subscription_type='enterprise',
+                lead_view_limit=9999
+            )
+            db.session.add(admin)
+            db.session.commit()
+init_db()
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
