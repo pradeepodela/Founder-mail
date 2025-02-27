@@ -240,6 +240,11 @@ def callback():
         
         return redirect(url_for("dashboard"))
     return "Failed to get user info", 400
+@app.template_filter('datetime')
+def datetime_filter(value):
+    if isinstance(value, str):
+        return datetime.fromisoformat(value)
+    return value
 
 @app.route('/admin')
 @login_required
