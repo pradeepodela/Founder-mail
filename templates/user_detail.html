@@ -89,9 +89,9 @@
                                 <td class="px-4 py-2 border">{{ session.login_time }}</td>
                                 <td class="px-4 py-2 border">{{ session.logout_time or 'Active' }}</td>
                                 <td class="px-4 py-2 border">
-                                    {% if session.logout_time %}
-                                        {{ ((session.logout_time|datetime) - (session.login_time|datetime)).total_seconds()|round|int }} seconds
-                                    {% else %}
+                                   {% if session.logout_time %}
+                                        {{ (session.logout_time - session.login_time).total_seconds()|round|int }} seconds
+                                   {% else %}
                                         Active Session
                                     {% endif %}
                                 </td>
