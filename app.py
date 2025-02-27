@@ -250,69 +250,49 @@ def admin_dashboard():
     try:
         # Get users with their view counts and latest activity
         users_data = db.session.query(
-            User,
-            func.count(LeadView.id).label('view_count'),
-            func.max(UserSession.login_time).label('last_activity')
-        ).outerjoin(LeadView).outerjoin(UserSession).group_by(User.id).order_by(User.created_at.desc()).all()
-
-        # Format user data for template
-        users = []
-        for result in users_data:
-            users.append({
-                'id': result[0].id,
-                'email': result[0].email,
-                'name': result[0].name,
-                'created_at': result[0].created_at,
-                'last_login': result[0].last_login,
-                'subscription_type': result[0].subscription_type,
-                'lead_view_limit': result[0].lead_view_limit,
-                'view_count': result[1] or 0,  # view_count
-                'last_activity': result[2] or 'No activity'  # last_activity
-            })
-
+            User.id,
+            User.email,
+            User.name, 
+            User.created_at,
+            User.last_login,
+            User.subscription_type,
+            User.lead_view_limit,
+            func.count(LeadView.id).label('view_count')
+        ).outerjoin(
+            LeadView, User.id == LeadView.user_id
+        ).group_by(
+            User.id
+        ).order_by(
+            User.created_at.desc()
+        ).all()
+        
         # Get recent lead views with user information
         lead_views = db.session.query(
-            User.email,
-            User.name,
-            LeadView.lead_index,
-            LeadView.viewed_at,
-            LeadData.company_name
+            User.email,  # Index 0
+            LeadView.lead_index,  # Index 1
+            LeadView.viewed_at  # Index 2
         ).join(
             User, User.id == LeadView.user_id
-        ).outerjoin(
-            LeadData, LeadData.id == LeadView.lead_index
         ).order_by(
             LeadView.viewed_at.desc()
         ).limit(100).all()
-
-        # Format lead views for template
-        formatted_lead_views = [
-            {
-                'email': view.email,
-                'user_name': view.name,
-                'lead_index': view.lead_index,
-                'viewed_at': view.viewed_at,
-                'company_name': view.company_name or 'Unknown Company'
-            }
-            for view in lead_views
-        ]
-
+        
         # Get summary statistics
         stats = {
-            'total_users': len(users),
+            'total_users': len(users_data),
             'total_views': db.session.query(func.count(LeadView.id)).scalar() or 0,
             'active_users_today': db.session.query(func.count(func.distinct(UserSession.user_id))).filter(
                 func.date(UserSession.login_time) == func.current_date()
             ).scalar() or 0
         }
-
+        
         return render_template(
             'admin.html',
-            users=users,
-            lead_views=formatted_lead_views,
+            users=users_data,
+            lead_views=lead_views,
             stats=stats
         )
-
+        
     except Exception as e:
         print(f"Admin dashboard error: {e}")
         db.session.rollback()  # Ensure rollback on error
