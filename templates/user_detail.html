@@ -59,11 +59,19 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for view in analytics.lead_views %}
+<!--                             {% for view in analytics.lead_views %}
                             <tr>
                                 <td class="px-4 py-2 border">{{ view.lead_index }}</td>
                                 <td class="px-4 py-2 border">{{ view.Company_Name or 'N/A' }}</td>
                                 <td class="px-4 py-2 border">{{ view.viewed_at }}</td>
+                            </tr>
+                            {% endfor %} -->
+
+                            {% for view_tuple in analytics.lead_views %}
+                            <tr>
+                                <td class="px-4 py-2 border">{{ view_tuple[0].lead_index }}</td>
+                                <td class="px-4 py-2 border">{{ view_tuple[1] or 'N/A' }}</td>
+                                <td class="px-4 py-2 border">{{ view_tuple[0].viewed_at }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
