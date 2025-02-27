@@ -258,20 +258,16 @@ def admin_dashboard():
         # Format user data for template
         users = []
         for result in users_data:
-            user = result[0]  # Ensure first element is always User object
-            view_count = result[1] if len(result) > 1 else 0  # Handle missing count
-            last_activity = result[2] if len(result) > 2 else None  # Handle missing activity
-
             users.append({
-                'id': user.id,
-                'email': user.email,
-                'name': user.name,
-                'created_at': user.created_at,
-                'last_login': user.last_login,
-                'subscription_type': user.subscription_type,
-                'lead_view_limit': user.lead_view_limit,
-                'view_count': view_count or 0,  # Default to 0 if None
-                'last_activity': last_activity or 'No activity'  # Default if None
+                'id': result[0].id,
+                'email': result[0].email,
+                'name': result[0].name,
+                'created_at': result[0].created_at,
+                'last_login': result[0].last_login,
+                'subscription_type': result[0].subscription_type,
+                'lead_view_limit': result[0].lead_view_limit,
+                'view_count': result[1] or 0,  # view_count
+                'last_activity': result[2] or 'No activity'  # last_activity
             })
 
         # Get recent lead views with user information
